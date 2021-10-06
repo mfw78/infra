@@ -31,7 +31,7 @@ services:
     volumes:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
-      - ./.env.grafana
+      - ./.env-grafana
     restart: always
   node-exporter:
     image: prom/node-exporter:latest
@@ -96,7 +96,7 @@ services:
       - ./clef/testnet:/app/data
     command: full
     env_file:
-      - ./env-clef-testnet
+      - ./.env-clef-testnet
   bee-testnet:
     image: ethersphere/bee:latest
     restart: unless-stopped
@@ -155,3 +155,5 @@ services:
     command: start
     depends_on:
       - clef-testnet
+    env_file:
+      - "./.env-bee-testnet"
