@@ -1,0 +1,157 @@
+version: '3.2'
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - 8080:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus/config:/etc/prometheus/:ro
+      - ./prometheus:/prometheus
+    depends_on:
+      - cadvisor
+  grafana:
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    env_file:
+      - ./.env.grafana
+    restart: always
+  node-exporter:
+    image: prom/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - 9100:9100
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - 9093:9093
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    restart: always
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    depends_on:
+      - prometheus
+  geth-goerli:
+    image: ethereum/client-go:stable
+    ports:
+      - 9545:8545
+      - 9546:8546
+    volumes:
+      - /var/lib/blockchains/goerli:/root/.ethereum
+    restart: always
+    command:
+      - '--goerli'
+      - '--http'
+      - '--http.corsdomain=*'
+      - '--http.vhosts=*'
+      - '--http.addr=0.0.0.0'
+      - '--cache=2048'
+      - '--ws'
+      - '--ws.addr=0.0.0.0'
+      - '--metrics'
+      - '--nat=upnp'
+  geth-goerli-exporter:
+    image: hunterlong/gethexporter:latest
+    ports:
+      - 9101:9090
+    environment:
+      - GETH=http://geth-goerli:8545
+    depends_on:
+      - geth-goerli
+  clef-testnet:
+    image: ethersphere/clef:latest
+    restart: unless-stopped
+    ports:
+      - 8550:8550
+    environment:
+      - CLEF_CHAINID
+    volumes:
+      - ./clef/testnet:/app/data
+    command: full
+    env_file:
+      - ./env-clef-testnet
+  bee-testnet:
+    image: ethersphere/bee:latest
+    restart: unless-stopped
+    environment:
+      - BEE_API_ADDR
+      - BEE_BLOCK_TIME
+      - BEE_BOOTNODE
+      - BEE_BOOTNODE_MODE
+      - BEE_CLEF_SIGNER_ENABLE
+      - BEE_CLEF_SIGNER_ENDPOINT=http://clef-testnet:8550
+      - BEE_CONFIG
+      - BEE_CORS_ALLOWED_ORIGINS
+      - BEE_DATA_DIR
+      - BEE_CACHE_CAPACITY
+      - BEE_DB_OPEN_FILES_LIMIT
+      - BEE_DB_BLOCK_CACHE_CAPACITY
+      - BEE_DB_WRITE_BUFFER_SIZE
+      - BEE_DB_DISABLE_SEEKS_COMPACTION
+      - BEE_DEBUG_API_ADDR
+      - BEE_DEBUG_API_ENABLE
+      - BEE_GATEWAY_MODE
+      - BEE_GLOBAL_PINNING_ENABLE
+      - BEE_FULL_NODE
+      - BEE_NAT_ADDR
+      - BEE_NETWORK_ID
+      - BEE_P2P_ADDR
+      - BEE_P2P_QUIC_ENABLE
+      - BEE_P2P_WS_ENABLE
+      - BEE_PASSWORD
+      - BEE_PASSWORD_FILE
+      - BEE_PAYMENT_EARLY
+      - BEE_PAYMENT_THRESHOLD
+      - BEE_PAYMENT_TOLERANCE
+      - BEE_POSTAGE_STAMP_ADDRESS
+      - BEE_RESOLVER_OPTIONS
+      - BEE_SWAP_ENABLE
+      - BEE_SWAP_ENDPOINT
+      - BEE_SWAP_FACTORY_ADDRESS
+      - BEE_SWAP_LEGACY_FACTORY_ADDRESSES
+      - BEE_SWAP_INITIAL_DEPOSIT
+      - BEE_SWAP_DEPLOYMENT_GAS_PRICE
+      - BEE_TRACING_ENABLE
+      - BEE_TRACING_ENDPOINT
+      - BEE_TRACING_SERVICE_NAME
+      - BEE_TRANSACTION
+      - BEE_VERBOSITY
+      - BEE_WELCOME_MESSAGE
+      - BEE_MAINNET
+    ports:
+      - "1733:1633"
+      - "1734:1634"
+      - "1735:1635"
+    volumes:
+      - ./bee/testnet:/home/bee/.bee
+      - ./bee/testnet/password:/home/bee/.bee/password
+    command: start
+    depends_on:
+      - clef-testnet
