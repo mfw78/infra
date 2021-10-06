@@ -94,8 +94,6 @@ services:
     restart: unless-stopped
     ports:
       - 8550:8550
-    environment:
-      - CLEF_CHAINID
     volumes:
       - ./clef/testnet:/app/data
     command: full
@@ -104,51 +102,6 @@ services:
   bee-testnet:
     image: ethersphere/bee:latest
     restart: unless-stopped
-    environment:
-      - BEE_API_ADDR
-      - BEE_BLOCK_TIME
-      - BEE_BOOTNODE
-      - BEE_BOOTNODE_MODE
-      - BEE_CLEF_SIGNER_ENABLE
-      - BEE_CLEF_SIGNER_ENDPOINT=http://clef-testnet:8550
-      - BEE_CONFIG
-      - BEE_CORS_ALLOWED_ORIGINS
-      - BEE_DATA_DIR
-      - BEE_CACHE_CAPACITY
-      - BEE_DB_OPEN_FILES_LIMIT
-      - BEE_DB_BLOCK_CACHE_CAPACITY
-      - BEE_DB_WRITE_BUFFER_SIZE
-      - BEE_DB_DISABLE_SEEKS_COMPACTION
-      - BEE_DEBUG_API_ADDR
-      - BEE_DEBUG_API_ENABLE
-      - BEE_GATEWAY_MODE
-      - BEE_GLOBAL_PINNING_ENABLE
-      - BEE_FULL_NODE
-      - BEE_NAT_ADDR
-      - BEE_NETWORK_ID
-      - BEE_P2P_ADDR
-      - BEE_P2P_QUIC_ENABLE
-      - BEE_P2P_WS_ENABLE
-      - BEE_PASSWORD
-      - BEE_PASSWORD_FILE
-      - BEE_PAYMENT_EARLY
-      - BEE_PAYMENT_THRESHOLD
-      - BEE_PAYMENT_TOLERANCE
-      - BEE_POSTAGE_STAMP_ADDRESS
-      - BEE_RESOLVER_OPTIONS
-      - BEE_SWAP_ENABLE
-      - BEE_SWAP_ENDPOINT
-      - BEE_SWAP_FACTORY_ADDRESS
-      - BEE_SWAP_LEGACY_FACTORY_ADDRESSES
-      - BEE_SWAP_INITIAL_DEPOSIT
-      - BEE_SWAP_DEPLOYMENT_GAS_PRICE
-      - BEE_TRACING_ENABLE
-      - BEE_TRACING_ENDPOINT
-      - BEE_TRACING_SERVICE_NAME
-      - BEE_TRANSACTION
-      - BEE_VERBOSITY
-      - BEE_WELCOME_MESSAGE
-      - BEE_MAINNET
     ports:
       - "1733:1633"
       - "1734:1634"
