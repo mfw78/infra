@@ -13,8 +13,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - 9090:9090
+    #ports:
+    #  - 9090:9090
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
@@ -79,8 +79,8 @@ services:
       - '--nat=upnp'
   geth-goerli-exporter:
     image: hunterlong/gethexporter:latest
-    ports:
-      - 9101:9090
+    # ports:
+    #   - 9101:9090
     environment:
       - GETH=http://geth-goerli:8545
     depends_on:
