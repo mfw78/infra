@@ -134,3 +134,13 @@ services:
     ports:
       - "8545:8545"
     restart: unless-stopped
+  nethermind-xdai:
+    image: nethermind/nethermind:latest
+    volumes:
+      - /var/lib/blockchains/xdai:/nethermind/data
+    ports:
+      - "10545:8545/tcp"
+      - "10546:8546/tcp"
+    restart: unless-stopped
+    env_file:
+      - "./.env-nethermind"
