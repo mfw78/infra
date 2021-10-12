@@ -66,4 +66,10 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['geth-goerli-exporter:9100']
+      - targets: ['geth-goerli-exporter:9090']
+
+  - job_name: 'erigon'
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['erigon:6060','rpcdaemon:6060']

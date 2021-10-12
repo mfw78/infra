@@ -14,8 +14,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    #ports:
-    #  - 9090:9090
+    ports:
+      - "9090:9090"
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
@@ -64,8 +64,10 @@ services:
   geth-goerli:
     image: ethereum/client-go:stable
     ports:
-      - 9545:8545
-      - 9546:8546
+      - "9545:8545"
+      - "9546:8546"
+      - "40404:40404/tcp"
+      - "40404:40404/udp"
     volumes:
       - /var/lib/blockchains/goerli:/root/.ethereum
     restart: unless-stopped
@@ -79,7 +81,9 @@ services:
       - '--ws'
       - '--ws.addr=0.0.0.0'
       - '--metrics'
-      - '--nat=upnp'
+      - '--metrics.addr=0.0.0.0'
+      - '--metrics.port=9100'
+      - '--port=40404'
   geth-goerli-exporter:
     image: hunterlong/gethexporter:latest
     # ports:
@@ -92,13 +96,19 @@ services:
   clef-testnet:
     image: ethersphere/clef:latest
     restart: unless-stopped
-    ports:
-      - 8550:8550
     volumes:
       - ./clef/testnet:/app/data
     command: full
     env_file:
       - ./.env-clef-testnet
+  clef-mainnet:
+    image: ethersphere/clef:latest
+    restart: unless-stopped
+    volumes:
+      - ./clef/mainnet:/app/data
+    command: full
+    env_file:
+      - ./.env-clef-mainnet
   bee-testnet:
     image: ethersphere/bee:latest
     restart: unless-stopped
@@ -107,13 +117,28 @@ services:
       - "1734:1634"
       - "1735:1635"
     volumes:
-      - ./bee/testnet:/home/bee/.bee
+      - /var/lib/blockchains/bee-testnet:/home/bee/.bee
       - ./bee/testnet/password:/home/bee/.bee/password
     command: start
     depends_on:
       - clef-testnet
     env_file:
       - "./.env-bee-testnet"
+  bee-mainnet:
+    image: ethersphere/bee:stable
+    restart: unless-stopped
+    ports:
+      - "1633:1633"
+      - "1634:1634"
+      - "1635:1635"
+    volumes:
+      - /var/lib/blockchains/bee-mainnet:/home/bee/.bee
+      - ./bee/mainnet/password:/home/bee/.bee/password
+    command: start
+    depends_on:
+      - clef-mainnet
+    env_file:
+      - "./.env-bee-mainnet"
   erigon:
     image: thorax/erigon:stable
     command: erigon --metrics --metrics.addr=0.0.0.0 --metrics.port=6060 --private.api.addr=0.0.0.0:9090 --pprof --pprof.addr=0.0.0.0 --pprof.port=6061
@@ -127,20 +152,21 @@ services:
     restart: unless-stopped
   rpcdaemon:
     image: thorax/erigon:stable
-    command: rpcdaemon --datadir=/home/erigon/.local/share/erigon --private.api.addr=erigon:9090 --http.addr=0.0.0.0 --http.vhosts=* --http.corsdomain=* --http.api=eth,debug,net --ws
+    command: command: rpcdaemon --datadir=/home/erigon/.local/share/erigon --private.api.addr=erigon:9090 --http.addr=0.0.0.0 --http.vhosts=* --http.corsdomain=* --http.api=eth,debug,net --ws --metrics --metrics.addr=0.0.0.0 --metrics.port=6060
     pid: service:erigon # Use erigon's PID namespace. It's required to open Erigon's DB from another process (RPCDaemon local-mode)
     volumes:
       - /var/lib/blockchains/mainnet:/home/erigon/.local/share/erigon
     ports:
       - "8545:8545"
     restart: unless-stopped
-  nethermind-xdai:
-    image: nethermind/nethermind:latest
+  openethereum-xdai:
+    image: openethereum/openethereum:latest
+    command: '--chain=xdai --base-path=/home/openethereum/xdai --port 50505 --interface=all --jsonrpc-port=8545 --jsonrpc-interface=all --ws-port=8546 --ws-interface=all --metrics-prefix=xdai --metrics-port=3000 --metrics-interface=all'
     volumes:
-      - /var/lib/blockchains/xdai:/nethermind/data
+      - /var/lib/blockchains/xdai:/home/openethereum/xdai
     ports:
       - "10545:8545/tcp"
       - "10546:8546/tcp"
+      - "50505:50505/tcp"
+      - "50505:50505/udp"
     restart: unless-stopped
-    env_file:
-      - "./.env-nethermind"
