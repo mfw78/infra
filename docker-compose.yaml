@@ -152,7 +152,7 @@ services:
     restart: unless-stopped
   rpcdaemon:
     image: thorax/erigon:stable
-    command: command: rpcdaemon --datadir=/home/erigon/.local/share/erigon --private.api.addr=erigon:9090 --http.addr=0.0.0.0 --http.vhosts=* --http.corsdomain=* --http.api=eth,debug,net --ws --metrics --metrics.addr=0.0.0.0 --metrics.port=6060
+    command: rpcdaemon --datadir=/home/erigon/.local/share/erigon --private.api.addr=erigon:9090 --http.addr=0.0.0.0 --http.vhosts=* --http.corsdomain=* --http.api=eth,debug,net --ws --metrics --metrics.addr=0.0.0.0 --metrics.port=6060
     pid: service:erigon # Use erigon's PID namespace. It's required to open Erigon's DB from another process (RPCDaemon local-mode)
     volumes:
       - /var/lib/blockchains/mainnet:/home/erigon/.local/share/erigon
